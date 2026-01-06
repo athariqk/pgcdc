@@ -22,15 +22,15 @@ type ReplicationMode uint8
 
 const (
 	STREAM_MODE ReplicationMode = iota
-	POPULATE_MODE
+	BOOTSTRAP_MODE
 )
 
 func (m ReplicationMode) String() string {
 	switch m {
 	case STREAM_MODE:
 		return "Stream"
-	case POPULATE_MODE:
-		return "Full replication"
+	case BOOTSTRAP_MODE:
+		return "Bootstrap"
 	default:
 		return fmt.Sprintf("%d", int(m))
 	}
@@ -99,12 +99,12 @@ func (r *LogicalReplicator) Run() {
 	switch r.Mode {
 	case STREAM_MODE:
 		r.startStreaming()
-	case POPULATE_MODE:
-		err = r.startFullReplication()
+	case BOOTSTRAP_MODE:
+		err = r.startBootstrap()
 		if err != nil {
-			log.Fatalln("Failed full replication:", err)
+			log.Fatalln("Failed bootstrapping:", err)
 		}
-		log.Println("Full replication finished")
+		log.Println("Bootstrapping finished")
 		r.startStreaming()
 	default:
 		log.Println("No replication mode specified")
@@ -464,13 +464,17 @@ func (r *LogicalReplicator) collectFields(
 	return fields
 }
 
-func (r *LogicalReplicator) startFullReplication() error {
+func (r *LogicalReplicator) startBootstrap() error {
 	for table, node := range r.Schema.Nodes {
 		log.Println("Replicating table:", table)
 
 		rows, err := r.queryBuilder.GetRows(context.Background(), node.Namespace, table, node.PrimaryKey)
 		if err != nil {
 			return fmt.Errorf("querying rows: %s", err.Error())
+		}
+
+		if len(rows) == 0 {
+			continue
 		}
 
 		for _, row := range rows {
