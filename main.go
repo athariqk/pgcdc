@@ -25,6 +25,12 @@ func getEnv(key, fallback string) string {
 func main() {
 	env := getEnv("PGCDC_ENV", "development")
 
+	_mode, err := strconv.Atoi(getEnv("PGCDC_MODE", "0"))
+	if err != nil {
+		_mode = 0
+	}
+	mode := logrepl.ReplicationMode(_mode)
+
 	godotenv.Load(".env." + env + ".local")
 	if env != "test" {
 		godotenv.Load(".env.local")
@@ -50,11 +56,6 @@ func main() {
 	standbyMessageTimeout, err := strconv.Atoi(getEnv("PGSQL_STANDBY_MESSAGE_TIMEOUT", "10"))
 	if err != nil {
 		standbyMessageTimeout = 10
-	}
-
-	mode := logrepl.STREAM_MODE
-	if len(os.Args) > 1 && os.Args[1] == "full" {
-		mode = logrepl.POPULATE_MODE
 	}
 
 	pubs := []logrepl.Publisher{
