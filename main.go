@@ -11,11 +11,19 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func main() {
-	env := os.Getenv("PGCDC_ENV")
-	if env == "" {
-		env = "development"
+// Source - https://stackoverflow.com/a/40326580
+// Posted by janos, modified by community. See post 'Timeline' for change history
+// Retrieved and modified 2026-01-06, License - CC BY-SA 3.0
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
 	}
+	log.Default().Printf("Env variable %s using fallback value: %s", key, fallback)
+	return fallback
+}
+
+func main() {
+	env := getEnv("PGCDC_ENV", "development")
 
 	godotenv.Load(".env." + env + ".local")
 	if env != "test" {
@@ -26,11 +34,20 @@ func main() {
 
 	log.Println("Environment:", env)
 
-	outputPlugin := os.Getenv("OUTPUT_PLUGIN")
-	connectionString := os.Getenv("PGSQL_CONNECTION_STRING")
-	pubName := os.Getenv("PGSQL_PUB_NAME")
-	slotName := os.Getenv("PGSQL_REPL_SLOT_NAME")
-	standbyMessageTimeout, err := strconv.Atoi(os.Getenv("PGSQL_STANDBY_MESSAGE_TIMEOUT"))
+	outputPlugin := getEnv("OUTPUT_PLUGIN", "pgoutput")
+	connectionString := getEnv("PGSQL_CONNECTION_STRING", "")
+	if connectionString == "" {
+		panic("PGSQL connection string is required but empty")
+	}
+	pubName := getEnv("PGSQL_PUB_NAME", "")
+	if pubName == "" {
+		panic("PGSQL publication name is required but empty")
+	}
+	slotName := getEnv("PGSQL_REPL_SLOT_NAME", "")
+	if slotName == "" {
+		panic("PGSQL replication slot name is required but empty")
+	}
+	standbyMessageTimeout, err := strconv.Atoi(getEnv("PGSQL_STANDBY_MESSAGE_TIMEOUT", "10"))
 	if err != nil {
 		standbyMessageTimeout = 10
 	}
@@ -42,9 +59,9 @@ func main() {
 
 	pubs := []logrepl.Publisher{
 		publishers.NewNsqPublisher(
-			os.Getenv("NSQD_INSTANCE_ADDRESS"),
-			os.Getenv("NSQD_INSTANCE_PORT"),
-			os.Getenv("NSQ_TOPIC")),
+			getEnv("NSQD_INSTANCE_ADDRESS", "localhost"),
+			getEnv("NSQD_INSTANCE_PORT", "4150"),
+			getEnv("NSQ_TOPIC", "replication")),
 	}
 
 	replicator := logrepl.LogicalReplicator{
