@@ -105,6 +105,7 @@ func (r *LogicalReplicator) Run() {
 			log.Fatalln("Failed full replication:", err)
 		}
 		log.Println("Full replication finished")
+		r.startStreaming()
 	default:
 		log.Println("No replication mode specified")
 	}
