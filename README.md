@@ -90,6 +90,6 @@ List of table-level transform operators.
 
 Run pgcdc in logical streaming replication protocol, this is the default replication/capture mode.
 
-### full
+### bootstrap
 
 Fully replicates/captures the schema to the connectors. Useful when you're trying to add missing documents or running CDC for the first time and need to "populate" the target data store.
