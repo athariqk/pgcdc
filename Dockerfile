@@ -9,7 +9,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o pgcdc .
 FROM alpine:3.19
 WORKDIR /app
 COPY --from=builder /app/pgcdc ./pgcdc
-COPY schema.yaml ./schema.yaml
+COPY schema.example.yaml ./schema.example.yaml
 COPY .env.example ./
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh

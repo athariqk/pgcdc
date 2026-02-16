@@ -1,0 +1,17 @@
+# Example schema for pgcdc
+nodes:
+  organizations:
+    columns:
+      - name
+      - slug
+
+  offers:
+    columns:
+      - job_title
+      - organization_id
+      - created_at
+    privacy:
+      enabled: true
+      namespace: "anonymized"
+
+# In production, mount a full schema.yaml tailored to your environment.
