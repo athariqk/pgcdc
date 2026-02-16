@@ -10,8 +10,10 @@ FROM alpine:3.19
 WORKDIR /app
 COPY --from=builder /app/pgcdc ./pgcdc
 COPY schema.yaml ./schema.yaml
-COPY .env* ./
+COPY .env.example ./
+COPY docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh
 RUN adduser -D -u 10001 pgcdcuser
 USER pgcdcuser
 EXPOSE 8080
-ENTRYPOINT ["./pgcdc"]
+ENTRYPOINT ["./docker-entrypoint.sh"]
