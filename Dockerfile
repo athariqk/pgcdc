@@ -4,13 +4,15 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
+COPY .env.example .env
+COPY schema.example.yaml schema.yaml
 RUN CGO_ENABLED=0 GOOS=linux go build -o pgcdc .
 
 FROM alpine:3.19
 WORKDIR /app
 COPY --from=builder /app/pgcdc ./pgcdc
-COPY schema.example.yaml ./schema.example.yaml
-COPY .env.example ./
+COPY --from=builder /app/.env ./.env
+COPY --from=builder /app/schema.yaml ./schema.yaml
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
 RUN adduser -D -u 10001 pgcdcuser
